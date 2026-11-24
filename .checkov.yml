@@ -1,0 +1,7 @@
+# Repo-wide decisions only. Anything about a specific resource is skipped inline, next
+# to that resource, with a "#checkov:skip=CHECK:reason" comment, so the same check still
+# applies to any new resource.
+skip-check:
+  - CKV_TF_1 # Community modules come from the Terraform registry, pinned to an exact version; the registry can't pin a commit hash
+  - CKV_AWS_338 # Log groups: 1-year retention is unnecessary for a small personal project
+  - CKV_AWS_158 # Log groups: customer-managed KMS keys aren't worth the key management here

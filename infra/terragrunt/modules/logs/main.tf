@@ -42,8 +42,6 @@ module "task_logs" {
 }
 
 resource "aws_cloudwatch_log_group" "control_plane" {
-  #checkov:skip=CKV_AWS_158:AWS-managed encryption; a customer KMS key adds cost and nothing for these logs
-  #checkov:skip=CKV_AWS_338:Kept for var.retention_days to keep the demo's costs low
   for_each = toset(var.clusters)
 
   name              = "/aws/eks/${each.key}/cluster"
@@ -51,8 +49,6 @@ resource "aws_cloudwatch_log_group" "control_plane" {
 }
 
 resource "aws_cloudwatch_log_group" "containers" {
-  #checkov:skip=CKV_AWS_158:AWS-managed encryption; a customer KMS key adds cost and nothing for these logs
-  #checkov:skip=CKV_AWS_338:Kept for var.retention_days to keep the demo's costs low
   for_each = toset(var.clusters)
 
   name              = "/${var.name}/${each.key}/containers"
