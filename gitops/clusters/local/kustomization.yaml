@@ -1,0 +1,17 @@
+# Everything Argo CD runs on the local kind cluster (scripts/local-cluster.sh): the shared
+# add-ons, minus anything that needs AWS (Karpenter's nodes).
+resources:
+  - ../../addons/metrics-server
+
+patches:
+  # kind's kubelets have self-signed certificates.
+  - target:
+      kind: Application
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /spec/source/helm
+        value:
+          valuesObject:
+            args:
+              - --kubelet-insecure-tls

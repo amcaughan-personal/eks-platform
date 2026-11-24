@@ -1,0 +1,34 @@
+# The one Application a cluster's bootstrap creates. It points Argo CD at
+# gitops/clusters/CLUSTER/, which lists everything else the cluster runs. CLUSTER and
+# REVISION are filled in by whoever creates it: the cluster's name, and the branch to
+# follow (main, or a branch being tested). Child apps from this repo carry the label
+# eks-platform/follows-root, and follow the same branch.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/amcaughan-personal/eks-platform.git
+    targetRevision: REVISION
+    path: gitops/clusters/CLUSTER
+    kustomize:
+      patches:
+        - target:
+            kind: Application
+            labelSelector: eks-platform/follows-root=true
+          patch: |-
+            - op: replace
+              path: /spec/source/targetRevision
+              value: REVISION
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

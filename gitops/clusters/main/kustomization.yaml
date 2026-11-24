@@ -1,0 +1,4 @@
+# Everything Argo CD runs on the main cluster.
+resources:
+  - ../../addons/metrics-server
+  - karpenter/application.yaml
