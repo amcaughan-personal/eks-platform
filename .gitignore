@@ -2,3 +2,8 @@
 .DS_Store
 .idea/
 .vscode/
+
+# Terraform and Terragrunt working files
+.terraform/
+.terragrunt-cache/
+*.tfplan
