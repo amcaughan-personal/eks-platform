@@ -22,12 +22,22 @@ infra/terragrunt/
         cluster.hcl   its name and Kubernetes version; tags everything Cluster = main
         eks/          control plane, a small system node group, core add-ons
         karpenter/    Karpenter, signed in to AWS through EKS Pod Identity
+        bootstrap/    Argo CD, and the root app that points it at gitops/clusters/main/
   modules/            the few modules no community module covers
-gitops/
-  clusters/main/      Kubernetes objects for one cluster, e.g. Karpenter's node pool
+gitops/               everything Argo CD installs
+  argocd/             Argo CD's Helm values, and the root app chart
+  addons/             add-ons every cluster runs (metrics-server)
+  clusters/
+    main/             what the main cluster runs: the add-ons, Karpenter's node pool
+    local/            what the local kind cluster runs: the add-ons that don't need AWS
 scripts/
   cluster-down.sh     takes a cluster down and checks nothing is left behind
+  local-cluster.sh    a local kind cluster running Argo CD, for working on gitops/
 ```
+
+Terraform creates only what has to exist before Argo CD can run (the cluster, Karpenter,
+Argo CD itself). Argo CD installs everything else from `gitops/clusters/<name>/`, and keeps
+the cluster matching it.
 
 Karpenter adds nodes when pods don't fit on the system nodes (spot first, Graviton or
 x86) and removes them five minutes after they empty.
@@ -53,9 +63,23 @@ About 15 minutes, from the dev container:
 ```bash
 cd /workspace/infra/terragrunt/live
 terragrunt run --all --working-dir clusters/main -- apply
-aws eks update-kubeconfig --name main --region us-east-2
-kubectl apply --recursive -f /workspace/gitops/clusters/main/
 ```
+
+Argo CD follows `main`. To try a branch on the cluster, push it and set
+`TF_VAR_revision=<branch>` on the apply. To reach Argo CD's UI:
+
+```bash
+aws eks update-kubeconfig --name main --region us-east-2
+kubectl -n argocd port-forward svc/argocd-server 8080:80    # then http://localhost:8080
+```
+
+## Working on gitops/ locally
+
+`scripts/local-cluster.sh up` creates a [kind](https://kind.sigs.k8s.io) cluster in Docker,
+installs Argo CD with the same chart and values, and points it at `gitops/clusters/local/`
+on the current branch (push it first). `scripts/local-cluster.sh down` deletes it. The dev
+container needs the host's Docker: VS Code sets that up; with `docker run`, add
+`--network host -v /var/run/docker.sock:/var/run/docker.sock --group-add $(getent group docker | cut -d: -f3)`.
 
 ## Take it down
 

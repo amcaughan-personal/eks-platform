@@ -21,7 +21,8 @@ case "${1:-}" in
       --namespace argocd --create-namespace \
       --values gitops/argocd/values.yaml --wait --timeout 5m
 
-    sed -e "s/CLUSTER/local/g" -e "s/REVISION/${branch//\//\\/}/g" gitops/argocd/root-app.yaml | kubectl apply -f -
+    helm upgrade --install root gitops/argocd/root --namespace argocd \
+      --set cluster=local --set revision="$branch"
 
     echo "Argo CD is syncing gitops/clusters/local/ from branch $branch."
     echo "UI: kubectl -n argocd port-forward svc/argocd-server 8080:80, then http://localhost:8080"

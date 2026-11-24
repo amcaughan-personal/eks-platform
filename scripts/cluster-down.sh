@@ -4,8 +4,10 @@
 #
 #   scripts/cluster-down.sh [cluster]    (default: main)
 #
-# 1. Deletes Karpenter's node pools and node classes, and waits for its nodes to go.
-#    Terraform never knew about those EC2 instances, so it can't remove them.
+# 1. Deletes Argo CD's applications, which removes everything they installed (otherwise
+#    Argo CD would put back whatever is deleted next). Then deletes Karpenter's node pools
+#    and node classes, and waits for its nodes to go: Terraform never knew about those EC2
+#    instances, so it can't remove them.
 # 2. Destroys the cluster's Terraform stacks.
 # 3. Sweeps for anything still tagged as this cluster's, and fails if it finds any.
 set -euo pipefail
@@ -18,6 +20,10 @@ export AWS_REGION="$region"
 if aws eks describe-cluster --name "$cluster" >/dev/null 2>&1; then
   export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
   aws eks update-kubeconfig --name "$cluster" --region "$region" >/dev/null
+  if kubectl get crd applications.argoproj.io >/dev/null 2>&1; then
+    echo "Removing Argo CD's applications..."
+    kubectl -n argocd delete applications --all --wait=true --timeout=10m
+  fi
   if kubectl get crd nodepools.karpenter.sh >/dev/null 2>&1; then
     echo "Removing Karpenter's nodes..."
     kubectl delete nodepools --all --wait=true --timeout=10m

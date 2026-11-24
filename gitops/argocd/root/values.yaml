@@ -1,0 +1,5 @@
+# Set by whoever installs this chart: Terraform (clusters/<name>/bootstrap) or
+# scripts/local-cluster.sh.
+cluster: ""
+# The branch Argo CD follows: main, or a branch being tested.
+revision: main
