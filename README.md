@@ -15,8 +15,11 @@ infra/terragrunt/
     shared/           what every cluster stands on, kept between clusters
       network/        VPC, public subnets in three zones, no NAT gateway
       logs/           Airflow task-log bucket, per-cluster log groups
+      iam/            each cluster's control-plane and node roles
     clusters/
-      main/           one cluster
+      main/
+        cluster.hcl   its name and Kubernetes version; tags everything Cluster = main
+        eks/          control plane, a small system node group, core add-ons
   modules/            the few modules no community module covers
 ```
 
