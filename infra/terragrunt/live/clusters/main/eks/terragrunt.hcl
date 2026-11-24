@@ -23,7 +23,7 @@ dependency "network" {
     vpc_id         = "vpc-00000000"
     public_subnets = ["subnet-00000000", "subnet-11111111", "subnet-22222222"]
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
 }
 
 dependency "iam" {
@@ -33,7 +33,7 @@ dependency "iam" {
     cluster_role_arns = { main = "arn:aws:iam::000000000000:role/mock-cluster" }
     node_role_arns    = { main = "arn:aws:iam::000000000000:role/mock-node" }
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
 }
 
 # The control-plane log group already exists (shared/logs creates it).
@@ -80,6 +80,11 @@ inputs = {
     }
     kube-proxy = {}
     coredns    = {}
+  }
+
+  # How Karpenter finds the security group for the nodes it launches.
+  node_security_group_tags = {
+    "karpenter.sh/discovery" = local.cluster.name
   }
 
   eks_managed_node_groups = {

@@ -23,8 +23,10 @@ inputs = {
   map_public_ip_on_launch = true
   enable_nat_gateway      = false
 
-  # Where the AWS Load Balancer Controller may place internet-facing load balancers.
   public_subnet_tags = {
+    # Where the AWS Load Balancer Controller may place internet-facing load balancers.
     "kubernetes.io/role/elb" = "1"
+    # Where Karpenter may launch nodes, for every cluster.
+    "karpenter.sh/discovery" = local.platform.name
   }
 }

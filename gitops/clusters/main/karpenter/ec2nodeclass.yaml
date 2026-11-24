@@ -1,0 +1,27 @@
+# How Karpenter builds a node for this cluster: the latest Amazon Linux 2023 image, the
+# cluster's node role (shared/iam), the platform's subnets and the cluster's node
+# security group, found by their karpenter.sh/discovery tags.
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  role: eks-platform-main-node
+  amiSelectorTerms:
+    - alias: al2023@latest
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: eks-platform
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: main
+  tags:
+    Cluster: main
+    Repo: amcaughan-personal/eks-platform
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 30Gi
+        volumeType: gp3
+        encrypted: true
+        deleteOnTermination: true
