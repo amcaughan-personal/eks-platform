@@ -22,7 +22,7 @@ dependency "eks" {
     cluster_endpoint                   = "https://mock.eks.amazonaws.com"
     cluster_certificate_authority_data = "bW9jaw=="
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
 }
 
 dependency "karpenter_shared" {
@@ -32,7 +32,7 @@ dependency "karpenter_shared" {
     controller_role_arns = { main = "arn:aws:iam::000000000000:role/mock-karpenter" }
     queue_names          = { main = "mock-karpenter" }
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
 }
 
 # Helm talks to this cluster's API with a short-lived token from the AWS CLI.

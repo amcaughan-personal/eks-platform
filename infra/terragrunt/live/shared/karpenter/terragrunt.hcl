@@ -16,7 +16,7 @@ dependency "iam" {
   mock_outputs = {
     node_role_arns = { main = "arn:aws:iam::000000000000:role/mock-node" }
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
 }
 
 inputs = {
