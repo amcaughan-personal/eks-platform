@@ -82,6 +82,11 @@ inputs = {
     coredns    = {}
   }
 
+  # How Karpenter finds the security group for the nodes it launches.
+  node_security_group_tags = {
+    "karpenter.sh/discovery" = local.cluster.name
+  }
+
   eks_managed_node_groups = {
     system = {
       ami_type       = "AL2023_ARM_64_STANDARD"

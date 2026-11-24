@@ -2,3 +2,4 @@
 # version constraints read this file.
 terraform 1.17.2
 terragrunt 1.2.2
+kubectl 1.37.2
