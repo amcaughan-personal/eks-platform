@@ -1,0 +1,31 @@
+name: terragrunt-plan
+
+# Plans every Terragrunt stack on pull requests that touch infrastructure, and comments
+# the changes (addresses and types only; this repo is public). While a cluster is down,
+# its stacks plan as "to add".
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".tool-versions"
+      - ".github/workflows/terragrunt-plan.yml"
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: terragrunt-plan-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    uses: amcaughan-personal/shared-workflows/.github/workflows/terragrunt-plan.yml@f0f0d6e584ed0188191247c0e608893c9b12fe04 # v2.3.1
+    with:
+      aws_region: us-east-2
+      terragrunt_working_dir: infra/terragrunt
+    secrets:
+      aws_role_arn: ${{ secrets.PLAN_ROLE_ARN }}

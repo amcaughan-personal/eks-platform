@@ -17,10 +17,19 @@ updates:
         patterns: ["*"]
         exclude-patterns: ["amcaughan-personal/*"]
   - package-ecosystem: docker
-    directory: /.devcontainer
+    directories:
+      - /.devcontainer
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
       # The org's own base image is already reviewed; take new digests right away.
       exclude: ["ghcr.io/amcaughan-personal/*"]
+    groups:
+      base-images:
+        patterns: ["*"]
+    ignore:
+      # Only refresh each image's digest (patches for the same version). Moving to a new
+      # OS or language version is a deliberate change, not an automatic one.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]

@@ -1,0 +1,27 @@
+name: drift
+
+# Every morning, plans the shared stacks on main and fails (so GitHub emails) if anything
+# would change: something was changed in AWS outside Terraform, or a merged change hasn't
+# been applied yet. Clusters aren't checked: they're brought up only when needed.
+# Read-only, as the plan role; the run's summary lists what differs, by address and type.
+
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # to sign in to AWS as the read-only plan role
+  pull-requests: write # requested by the shared workflow for PR comments; unused here
+
+jobs:
+  plan:
+    uses: amcaughan-personal/shared-workflows/.github/workflows/terragrunt-plan.yml@f0f0d6e584ed0188191247c0e608893c9b12fe04 # v2.3.1
+    with:
+      aws_region: us-east-2
+      terragrunt_working_dir: infra/terragrunt/live/shared
+      report_title: "Drift check"
+      fail_on_changes: true
+    secrets:
+      aws_role_arn: ${{ secrets.PLAN_ROLE_ARN }}

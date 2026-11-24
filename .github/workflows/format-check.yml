@@ -1,0 +1,16 @@
+name: format-check
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  formatting:
+    uses: amcaughan-personal/shared-workflows/.github/workflows/format-check.yml@f0f0d6e584ed0188191247c0e608893c9b12fe04 # v2.3.1
+    with:
+      terraform_modules_dir: infra/terragrunt
+      terragrunt_working_dir: infra/terragrunt
