@@ -1,0 +1,27 @@
+# The tenant's budget: what all its pods together may request.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: budget
+  namespace: {{ .Values.name }}
+spec:
+  hard:
+    requests.cpu: {{ .Values.quota.cpu | quote }}
+    requests.memory: {{ .Values.quota.memory | quote }}
+    limits.memory: {{ .Values.quota.memory | quote }}
+    pods: {{ .Values.quota.pods | quote }}
+---
+# Sizes for containers that don't set their own, so every pod counts against the budget.
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: defaults
+  namespace: {{ .Values.name }}
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: {{ .Values.defaults.cpu | quote }}
+        memory: {{ .Values.defaults.memory | quote }}
+      default:
+        memory: {{ .Values.defaults.memory | quote }}

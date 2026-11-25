@@ -2,6 +2,7 @@
 # add-ons, minus anything that needs AWS (Karpenter's nodes).
 resources:
   - ../../addons/metrics-server
+  - ../../addons/tenants
 
 patches:
   # kind's kubelets have self-signed certificates.

@@ -1,0 +1,42 @@
+# One tenant install (gitops/tenant, with its values) for each gitops/tenants/<name>/.
+# Onboarding a team is adding its folder.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: tenants
+  namespace: argocd
+  labels:
+    eks-platform/follows-root: "true"
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/amcaughan-personal/eks-platform.git
+        revision: main # the root app sets the branch it follows
+        files:
+          - path: gitops/tenants/*/values.yaml
+  template:
+    metadata:
+      name: "tenant-{{ .path.basename }}"
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io/foreground
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/amcaughan-personal/eks-platform.git
+        targetRevision: main # the root app sets the branch it follows
+        path: gitops/tenant
+        helm:
+          valueFiles:
+            - "../tenants/{{ .path.basename }}/values.yaml"
+          parameters:
+            - name: name
+              value: "{{ .path.basename }}"
+      destination:
+        server: https://kubernetes.default.svc
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

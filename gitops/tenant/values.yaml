@@ -1,0 +1,23 @@
+# Defaults for a tenant. Each tenant's gitops/tenants/<name>/values.yaml sets its own; the
+# tenant's name comes from its folder.
+name: ""
+
+# The tenant's own repo and the folder Argo CD deploys from it, into the tenant's namespace.
+repo: ""
+path: k8s
+revision: main
+
+# The most the tenant's pods may request in total.
+quota:
+  cpu: "4"
+  memory: 16Gi
+  pods: "40"
+
+# Requests and limits for containers that don't set their own.
+defaults:
+  cpu: 250m
+  memory: 256Mi
+
+# Service accounts whose pods get an IAM role through EKS Pod Identity: name -> role.
+# Each role must be named <tenant>-pod-<name> (the clusters/<name>/tenants stack checks).
+podRoles: {}

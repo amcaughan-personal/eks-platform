@@ -1,0 +1,20 @@
+# What the tenant may deploy: from its own repo, into its own namespace, nothing cluster-wide,
+# and not its own budget or defaults.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .Values.name }}
+  namespace: argocd
+spec:
+  description: Tenant {{ .Values.name }}
+  sourceRepos:
+    - {{ required "repo" .Values.repo }}
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: {{ .Values.name }}
+  clusterResourceWhitelist: []
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: ResourceQuota
+    - group: ""
+      kind: LimitRange
