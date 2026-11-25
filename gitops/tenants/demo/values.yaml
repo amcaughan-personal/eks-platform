@@ -1,6 +1,0 @@
-repo: https://github.com/amcaughan-personal/eks-platform.git
-path: tmp-demo-tenant
-revision: tenant-layer
-quota: { cpu: "1", memory: 1Gi, pods: "5" }
-podRoles:
-  workers: demo-pod-workers
