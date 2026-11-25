@@ -19,3 +19,11 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    # A rejected change (e.g. outside the tenant's namespace) gives up within about a minute,
+    # so the commit that fixes it is picked up promptly instead of waiting behind retries.
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 1m
