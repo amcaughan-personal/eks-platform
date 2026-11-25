@@ -1,0 +1,32 @@
+# Points Argo CD at gitops/clusters/<cluster>/, which lists everything else the cluster
+# runs. Child apps from this repo carry the label eks-platform/follows-root and follow the
+# same branch.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/foreground
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/amcaughan-personal/eks-platform.git
+    targetRevision: {{ required "revision" .Values.revision }}
+    path: gitops/clusters/{{ required "cluster" .Values.cluster }}
+    kustomize:
+      patches:
+        - target:
+            kind: Application
+            labelSelector: eks-platform/follows-root=true
+          patch: |-
+            - op: replace
+              path: /spec/source/targetRevision
+              value: {{ .Values.revision }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

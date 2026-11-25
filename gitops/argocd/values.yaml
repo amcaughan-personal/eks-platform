@@ -1,0 +1,38 @@
+# Argo CD's Helm values, for every cluster: the local kind cluster
+# (scripts/local-cluster.sh) and EKS (clusters/<name>/bootstrap). Argo CD then installs
+# everything else from gitops/clusters/<name>/.
+global:
+  domain: argocd.local
+
+configs:
+  params:
+    # The UI is reached through kubectl port-forward, so Argo CD serves plain HTTP inside
+    # the cluster.
+    server.insecure: true
+
+# Single sign-on and notifications aren't used.
+dex:
+  enabled: false
+notifications:
+  enabled: false
+
+controller:
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 1Gi }
+server:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 256Mi }
+repoServer:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { memory: 512Mi }
+applicationSet:
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { memory: 128Mi }
+redis:
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { memory: 128Mi }

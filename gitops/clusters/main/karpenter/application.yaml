@@ -1,0 +1,23 @@
+# Karpenter's node class and node pool. Karpenter itself is installed by Terraform
+# (clusters/main/karpenter), since it has to run before anything else needs a node.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter-nodes
+  namespace: argocd
+  labels:
+    eks-platform/follows-root: "true"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/foreground
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/amcaughan-personal/eks-platform.git
+    targetRevision: main # the root app sets the branch it follows
+    path: gitops/clusters/main/karpenter/nodes
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

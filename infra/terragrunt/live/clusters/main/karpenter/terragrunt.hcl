@@ -7,22 +7,16 @@ include "cluster" {
   expose = true
 }
 
+include "helm" {
+  path = find_in_parent_folders("helm.hcl")
+}
+
 locals {
   cluster = include.cluster.locals
 }
 
 terraform {
   source = "${get_repo_root()}/infra/terragrunt/modules/karpenter-install"
-}
-
-dependency "eks" {
-  config_path = "../eks"
-
-  mock_outputs = {
-    cluster_endpoint                   = "https://mock.eks.amazonaws.com"
-    cluster_certificate_authority_data = "bW9jaw=="
-  }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
 }
 
 dependency "karpenter_shared" {
@@ -33,26 +27,6 @@ dependency "karpenter_shared" {
     queue_names          = { main = "mock-karpenter" }
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
-}
-
-# Helm talks to this cluster's API with a short-lived token from the AWS CLI.
-generate "helm_provider" {
-  path      = "helm_provider.tf"
-  if_exists = "overwrite_terragrunt"
-
-  contents = <<EOF
-provider "helm" {
-  kubernetes = {
-    host                   = "${dependency.eks.outputs.cluster_endpoint}"
-    cluster_ca_certificate = base64decode("${dependency.eks.outputs.cluster_certificate_authority_data}")
-    exec = {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      args        = ["eks", "get-token", "--cluster-name", "${local.cluster.name}", "--region", "us-east-2"]
-    }
-  }
-}
-EOF
 }
 
 inputs = {

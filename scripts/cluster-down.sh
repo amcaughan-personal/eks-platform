@@ -4,9 +4,14 @@
 #
 #   scripts/cluster-down.sh [cluster]    (default: main)
 #
-# 1. Deletes Karpenter's node pools and node classes, and waits for its nodes to go.
-#    Terraform never knew about those EC2 instances, so it can't remove them.
-# 2. Destroys the cluster's Terraform stacks.
+# 1. Deletes Argo CD's applications, which removes everything they installed (otherwise
+#    Argo CD would put back whatever is deleted next). Then deletes Karpenter's node pools
+#    and node classes, and waits for its nodes to go: Terraform never knew about those EC2
+#    instances, so it can't remove them.
+# 2. Destroys the cluster's Terraform stacks. The VPC CNI sometimes leaves a terminated
+#    node's extra network interfaces behind, detached, which keeps the node security group
+#    in use; those are deleted (nothing uses a detached interface carrying the cluster's CNI
+#    tag), before the destroy and, if it stops on one, before a second try.
 # 3. Sweeps for anything still tagged as this cluster's, and fails if it finds any.
 set -euo pipefail
 
@@ -15,9 +20,33 @@ region="us-east-2"
 live="infra/terragrunt/live"
 export AWS_REGION="$region"
 
+delete_detached_interfaces() {
+  local enis
+  enis="$(aws ec2 describe-network-interfaces \
+    --filters "Name=tag:cluster.k8s.amazonaws.com/name,Values=$cluster" "Name=status,Values=available" \
+    --query 'NetworkInterfaces[].NetworkInterfaceId' --output text)"
+  for eni in $enis; do
+    echo "Deleting detached network interface $eni"
+    aws ec2 delete-network-interface --network-interface-id "$eni"
+  done
+}
+
+destroy() {
+  delete_detached_interfaces
+if ! destroy; then
+  echo "Destroy stopped; deleting detached network interfaces and trying again..."
+  delete_detached_interfaces
+  destroy
+fi
+}
+
 if aws eks describe-cluster --name "$cluster" >/dev/null 2>&1; then
   export KUBECONFIG="${KUBECONFIG:-$HOME/.kube/config}"
   aws eks update-kubeconfig --name "$cluster" --region "$region" >/dev/null
+  if kubectl get crd applications.argoproj.io >/dev/null 2>&1; then
+    echo "Removing Argo CD's applications..."
+    kubectl -n argocd delete applications --all --wait=true --timeout=10m
+  fi
   if kubectl get crd nodepools.karpenter.sh >/dev/null 2>&1; then
     echo "Removing Karpenter's nodes..."
     kubectl delete nodepools --all --wait=true --timeout=10m

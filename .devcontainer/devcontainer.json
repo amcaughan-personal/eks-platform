@@ -4,7 +4,11 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "runArgs": ["--hostname", "${localWorkspaceFolderBasename}"],
+  "runArgs": ["--hostname", "${localWorkspaceFolderBasename}", "--network", "host"],
+  "features": {
+    // The host's Docker, for local kind clusters (scripts/local-cluster.sh).
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": { "moby": false }
+  },
   "remoteUser": "dev",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
