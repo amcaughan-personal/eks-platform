@@ -47,6 +47,10 @@ inputs = {
   name               = local.cluster.name
   kubernetes_version = local.cluster.kubernetes_version
 
+  # At the end of a version's standard support, upgrade rather than move to extended support
+  # (six times the control plane's hourly price).
+  upgrade_policy = { support_type = "STANDARD" }
+
   vpc_id     = dependency.network.outputs.vpc_id
   subnet_ids = dependency.network.outputs.public_subnets
 
