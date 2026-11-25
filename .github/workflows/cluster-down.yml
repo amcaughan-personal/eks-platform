@@ -6,7 +6,7 @@ name: cluster-down
 # and by hand.
 #
 # AWS access is the cluster-lifecycle role (personal-infra), which trusts only this file's
-# jobs on main. The script's output stays on the runner (this repo is public); the log shows
+# jobs in the cluster-down environment (main only, no approval). The script's output stays on the runner (this repo is public); the log shows
 # its progress lines.
 
 on:
@@ -25,6 +25,7 @@ concurrency:
 jobs:
   down:
     runs-on: ubuntu-latest
+    environment: cluster-down
     timeout-minutes: 60
 
     steps:
