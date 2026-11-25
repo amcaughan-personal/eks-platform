@@ -25,3 +25,19 @@ spec:
         memory: {{ .Values.defaults.memory | quote }}
       default:
         memory: {{ .Values.defaults.memory | quote }}
+---
+# No pods at the system priorities, which would let the tenant evict other teams' pods (and
+# the platform's) when a node fills up.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: no-system-priority
+  namespace: {{ .Values.name }}
+spec:
+  hard:
+    pods: "0"
+  scopeSelector:
+    matchExpressions:
+      - operator: In
+        scopeName: PriorityClass
+        values: [system-cluster-critical, system-node-critical]

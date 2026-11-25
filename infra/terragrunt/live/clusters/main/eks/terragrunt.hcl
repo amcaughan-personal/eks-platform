@@ -90,6 +90,8 @@ inputs = {
   addons = {
     vpc-cni = {
       before_compute = true
+      # Enforce NetworkPolicies (tenants accept traffic only from their own namespace).
+      configuration_values = jsonencode({ enableNetworkPolicy = "true" })
     }
     eks-pod-identity-agent = {
       before_compute = true

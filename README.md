@@ -109,7 +109,8 @@ podRoles:                                   # service account -> IAM role in the
 
 Argo CD then gives the team a namespace, that budget (and default pod sizes), and an Argo CD
 project that deploys only from their repo, only into their namespace, and nothing
-cluster-wide or that changes their budget. From then on they ship by merging in their own
+cluster-wide or that changes their budget. Their pods accept traffic only from their own
+namespace, and can't use the system priorities to push other teams' pods off a node. From then on they ship by merging in their own
 repo. The `clusters/<name>/tenants` stack links each service account to its IAM role
 through Pod Identity; roles must be named `<name>-pod-*`, so a team can only get roles from
 its own repo, and personal-infra's `cluster-lifecycle` role may pass exactly those.

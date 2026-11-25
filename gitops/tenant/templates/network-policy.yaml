@@ -1,0 +1,13 @@
+# Only pods in the tenant's own namespace may reach its pods; other tenants can't. Outbound
+# traffic (AWS, the data APIs) is unrestricted.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: own-namespace-only
+  namespace: {{ .Values.name }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
