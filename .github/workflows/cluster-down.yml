@@ -1,0 +1,72 @@
+name: cluster-down
+
+# Takes the main cluster down with scripts/cluster-down.sh, which fails if anything tagged as
+# the cluster's is left behind. Runs every night, so a forgotten cluster never runs for more
+# than a day (skipped when there's no cluster, or the repo variable KEEP_CLUSTER_UP is true),
+# and by hand.
+#
+# AWS access is the cluster-lifecycle role (personal-infra), which trusts only this file's
+# jobs on main. The script's output stays on the runner (this repo is public); the log shows
+# its progress lines.
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # to sign in to AWS as the cluster-lifecycle role
+
+concurrency:
+  group: cluster-lifecycle
+  cancel-in-progress: false
+
+jobs:
+  down:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Terraform, Terragrunt and kubectl (versions from .tool-versions)
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          install_args: terraform terragrunt kubectl
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.LIFECYCLE_ROLE_ARN }}
+          aws-region: us-east-2
+          role-session-name: gha-cluster-down-${{ github.run_id }}-${{ github.run_attempt }}
+          mask-aws-account-id: true
+
+      - name: Decide
+        id: decide
+        env:
+          SCHEDULED: ${{ github.event_name == 'schedule' }}
+          KEEP_CLUSTER_UP: ${{ vars.KEEP_CLUSTER_UP }}
+        run: |
+          if [ "$SCHEDULED" = "true" ] && [ "$KEEP_CLUSTER_UP" = "true" ]; then
+            echo "KEEP_CLUSTER_UP is true: leaving the cluster up."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          elif [ "$SCHEDULED" = "true" ] && ! aws eks describe-cluster --name main >/dev/null 2>&1; then
+            echo "No cluster: nothing to take down."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Take the cluster down
+        if: steps.decide.outputs.run == 'true'
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/down.log"
+          status=0
+          scripts/cluster-down.sh main > "$log" 2>&1 || status=$?
+          grep -E '^(Removing|Deleting|Destroy stopped|Checking|  LEFT BEHIND|Cluster main is down)|Destroy complete|Error:' "$log" \
+            | sed -E 's/[0-9]{12}/************/g'
+          exit "$status"

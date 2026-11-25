@@ -54,8 +54,20 @@ inputs = {
   endpoint_public_access  = true
   endpoint_private_access = true
 
+  # Admin access for the roles in cluster.hcl, whoever created the cluster.
   authentication_mode                      = "API"
-  enable_cluster_creator_admin_permissions = true
+  enable_cluster_creator_admin_permissions = false
+  access_entries = {
+    for role in local.cluster.admins : basename(role) => {
+      principal_arn = "arn:aws:iam::${get_aws_account_id()}:role/${role}"
+      policy_associations = {
+        admin = {
+          policy_arn   = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = { type = "cluster" }
+        }
+      }
+    }
+  }
 
   # Pods get AWS access through EKS Pod Identity, so no IAM OIDC provider (IRSA).
   enable_irsa = false
