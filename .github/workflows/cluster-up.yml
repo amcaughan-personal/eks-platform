@@ -1,0 +1,56 @@
+name: cluster-up
+
+# Brings the main cluster up: its Terraform stacks (control plane, system nodes, Karpenter,
+# Argo CD), then Argo CD installs the rest from gitops/. Runs in the cluster-up environment,
+# so each run waits for approval: a running cluster costs money until cluster-down takes it
+# down (it does every night, unless the repo variable KEEP_CLUSTER_UP is true).
+#
+# AWS access is the cluster-lifecycle role (personal-infra), which trusts only this file's
+# jobs in the cluster-up environment. Terraform's output stays on the runner (this repo is
+# public); the log shows each stack's summary.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # to sign in to AWS as the cluster-lifecycle role
+
+concurrency:
+  group: cluster-lifecycle
+  cancel-in-progress: false
+
+jobs:
+  up:
+    runs-on: ubuntu-latest
+    environment: cluster-up
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Terraform, Terragrunt and kubectl (versions from .tool-versions)
+        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+        with:
+          install_args: terraform terragrunt kubectl
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.LIFECYCLE_ROLE_ARN }}
+          aws-region: us-east-2
+          role-session-name: gha-cluster-up-${{ github.run_id }}-${{ github.run_attempt }}
+          mask-aws-account-id: true
+
+      - name: Apply clusters/main
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/apply.log"
+          if terragrunt run --all --non-interactive --working-dir infra/terragrunt/live/clusters/main \
+              -- apply -auto-approve -no-color > "$log" 2>&1; then
+            grep -oE '\[[a-z/]+\] terraform: Apply complete.*' "$log"
+          else
+            grep -E 'Error:|Apply complete' "$log" | sed -E 's/[0-9]{12}/************/g'
+            exit 1
+          fi

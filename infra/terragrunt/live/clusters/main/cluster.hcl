@@ -4,6 +4,13 @@
 locals {
   name               = basename(dirname(get_original_terragrunt_dir())) # clusters/<name>/<stack>
   kubernetes_version = "1.37"
+
+  # IAM roles (path and name) with admin access to the cluster: CI's cluster-lifecycle role
+  # (personal-infra), and the AWS SSO administrator role used locally.
+  admins = [
+    "github-ci-cluster-lifecycle-eks-platform",
+    "aws-reserved/sso.amazonaws.com/us-east-2/AWSReservedSSO_AdministratorAccess_a4488d02a1cba7ef",
+  ]
 }
 
 inputs = {

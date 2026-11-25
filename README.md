@@ -59,7 +59,14 @@ terragrunt run --all -- plan
 
 ## Bring a cluster up
 
-About 15 minutes, from the dev container:
+From GitHub: run the **cluster-up** workflow (Actions tab). It waits for approval (the
+`cluster-up` environment), then applies `clusters/main` in about 15 minutes. Every night at
+03:00 UTC, **cluster-down** takes the cluster down again, unless the repository variable
+`KEEP_CLUSTER_UP` is `true`. Both sign in to AWS as the `cluster-lifecycle` role from
+personal-infra, which can manage this cluster's resources and nothing else, and both log only
+summary lines (this repo is public).
+
+Or from the dev container:
 
 ```bash
 cd /workspace/infra/terragrunt/live
@@ -83,6 +90,8 @@ container needs the host's Docker: VS Code sets that up; with `docker run`, add
 `--network host -v /var/run/docker.sock:/var/run/docker.sock --group-add $(getent group docker | cut -d: -f3)`.
 
 ## Take it down
+
+From GitHub: run the **cluster-down** workflow. Or from the dev container:
 
 ```bash
 cd /workspace
