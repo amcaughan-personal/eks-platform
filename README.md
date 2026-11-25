@@ -5,6 +5,8 @@ Terraform creates the cluster, Argo CD installs everything else from git, and Ka
 adds and removes nodes as work arrives. The first tenant is Airflow, running the pipelines
 in [data-pipelines](https://github.com/amcaughan-personal/data-pipelines).
 
+Why it's built this way, and what each choice gives up: [design decisions](docs/design-decisions.md).
+
 ## Layout
 
 ```
