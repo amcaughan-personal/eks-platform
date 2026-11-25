@@ -6,8 +6,10 @@ skip-check:
   - CKV_AWS_338 # Log groups: 1-year retention is unnecessary for a small personal project
   - CKV_AWS_158 # Log groups: customer-managed KMS keys aren't worth the key management here
 
-skip-path:
-  # A wrapper around the upstream Argo CD chart: rendering it scans Argo CD's own templates
-  # (its NetworkPolicies, limits and RBAC), not this repo's code. The chart's version is
-  # pinned and its values are reviewed here.
-  - gitops/argocd
+# Checkov's Helm and Kustomize renderers are off. They only render third-party charts (Argo
+# CD, metrics-server), and in Checkov 3.4.5 they crash on this repo's Kustomize files, which
+# can hang the whole scan. The YAML written here (gitops/) is all custom resources (Argo CD
+# Applications, Karpenter's NodePool and EC2NodeClass), which Checkov has no checks for.
+skip-framework:
+  - helm
+  - kustomize
