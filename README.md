@@ -110,3 +110,10 @@ Every pull request runs the org's shared security scan: leaked secrets (gitleaks
 vulnerable dependencies (Trivy), workflow problems (actionlint) and infrastructure
 misconfigurations (Checkov). `pre-commit install` adds the same secret check to every
 local commit.
+
+Every pull request also validates `gitops/` with kubeconform: each manifest and each
+cluster's rendered kustomization against Kubernetes' schemas and, for custom resources such
+as Argo CD Applications and Karpenter NodePools, their published schemas. Unknown fields
+fail, so a misspelt setting is caught before Argo CD applies it. Pull requests that touch
+`infra/` also get a Terragrunt plan comment, and `shared/` is checked for drift every
+morning.

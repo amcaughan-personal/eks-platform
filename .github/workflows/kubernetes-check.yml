@@ -1,0 +1,19 @@
+name: kubernetes-check
+
+# Validates gitops/ (every manifest and every cluster's rendered kustomization) against
+# Kubernetes' schemas and, for custom resources, the CRDs-catalog. Runs on every PR (it
+# takes seconds), so it can be a required check.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kubernetes:
+    uses: amcaughan-personal/shared-workflows/.github/workflows/kubernetes-check.yml@74341eec6ea571874cb258f2521faeb5f1d69b15 # unreleased, for testing
+    with:
+      kubernetes_version: 1.37.0
