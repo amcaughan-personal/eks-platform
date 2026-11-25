@@ -63,8 +63,9 @@ From GitHub: run the **cluster-up** workflow (Actions tab). It waits for approva
 `cluster-up` environment), then applies `clusters/main` in about 15 minutes. Every night at
 03:00 UTC, **cluster-down** takes the cluster down again, unless the repository variable
 `KEEP_CLUSTER_UP` is `true`. Each runs in its own environment (`cluster-up`,
-`cluster-down`) and signs in to AWS as the `cluster-lifecycle` role from personal-infra, which can manage this cluster's resources and nothing else, and both log only
-summary lines (this repo is public).
+`cluster-down`) and signs in to AWS as the `cluster-lifecycle` role from personal-infra,
+which can manage this cluster's resources and nothing else. Both log only summary lines
+(this repo is public).
 
 Or from the dev container:
 
