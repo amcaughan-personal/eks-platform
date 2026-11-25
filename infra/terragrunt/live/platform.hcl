@@ -2,7 +2,9 @@
 locals {
   name = "eks-platform"
 
-  # One folder per cluster under live/clusters/. Resources in shared/ that belong to one
-  # cluster (its log groups) are created for each name here.
-  clusters = ["main"]
+  # Every folder under clusters/ with a cluster.hcl is a cluster, named after its folder.
+  # shared/ creates each one's own pieces (IAM roles, log groups, Karpenter's queue).
+  clusters = sort([
+    for f in fileset("${dirname(find_in_parent_folders("root.hcl"))}/live/clusters", "*/cluster.hcl") : dirname(f)
+  ])
 }
