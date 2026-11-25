@@ -24,12 +24,15 @@ infra/terragrunt/
         cluster.hcl   its name and Kubernetes version; tags everything Cluster = main
         eks/          control plane, a small system node group, core add-ons
         karpenter/    Karpenter, signed in to AWS through EKS Pod Identity
+        tenants/      each tenant's Pod Identity links, from gitops/tenants/
         bootstrap/    Argo CD, and the root app that points it at gitops/clusters/main/
   modules/            the few modules no community module covers
 gitops/               everything Argo CD installs
   argocd/             Argo CD: the upstream chart's version and this platform's values
   root/               the one app a cluster starts from; points Argo CD at clusters/<name>/
-  addons/             add-ons every cluster runs (metrics-server)
+  addons/             what every cluster runs: metrics-server, the tenants ApplicationSet
+  tenant/             what every tenant team gets (a Helm chart)
+  tenants/<name>/     one folder per tenant team: its repo, budget and pod roles
   clusters/
     main/             what the main cluster runs: the add-ons, Karpenter's node pool
     local/            what the local kind cluster runs: the add-ons that don't need AWS
@@ -90,6 +93,29 @@ Argo CD follows `main`. To try a branch on the cluster, push it and set
 aws eks update-kubeconfig --name main --region us-east-2
 kubectl -n argocd port-forward svc/argocd-server 8080:80    # then http://localhost:8080
 ```
+
+## Onboarding a team
+
+A team that needs compute gets one folder, `gitops/tenants/<name>/values.yaml`, added in one
+pull request:
+
+```yaml
+repo: https://github.com/amcaughan-personal/<their-repo>.git
+path: k8s                                   # what Argo CD deploys from their repo
+quota: { cpu: "8", memory: 32Gi, pods: "50" }
+podRoles:                                   # service account -> IAM role in their repo
+  workers: <name>-pod-workers
+```
+
+Argo CD then gives the team a namespace, that budget (and default pod sizes), and an Argo CD
+project that deploys only from their repo, only into their namespace, and nothing
+cluster-wide or that changes their budget. From then on they ship by merging in their own
+repo. The `clusters/<name>/tenants` stack links each service account to its IAM role
+through Pod Identity; roles must be named `<name>-pod-*`, so a team can only get roles from
+its own repo, and personal-infra's `cluster-lifecycle` role may pass exactly those.
+
+A change that breaks the rules is refused whole (Argo CD shows why, and what's running
+stays as it was); pods over the budget aren't created, and running ones keep running.
 
 ## Working on gitops/ locally
 

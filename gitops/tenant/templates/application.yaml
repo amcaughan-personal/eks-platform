@@ -1,0 +1,29 @@
+# Deploys the tenant's folder, from its repo, into its namespace, within its project.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.name }}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/foreground
+spec:
+  project: {{ .Values.name }}
+  source:
+    repoURL: {{ .Values.repo }}
+    path: {{ .Values.path }}
+    targetRevision: {{ .Values.revision }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ .Values.name }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    # A rejected change (e.g. outside the tenant's namespace) gives up within about a minute,
+    # so the commit that fixes it is picked up promptly instead of waiting behind retries.
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 1m

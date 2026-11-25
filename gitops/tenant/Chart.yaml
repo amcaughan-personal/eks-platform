@@ -1,0 +1,5 @@
+apiVersion: v2
+name: tenant
+description: What every tenant team gets on a cluster. One install per gitops/tenants/<name>/values.yaml.
+type: application
+version: 1.0.0

@@ -50,6 +50,9 @@ jobs:
       - name: Karpenter
         run: scripts/apply-stack.sh clusters/main/karpenter
 
+      - name: Tenant access (Pod Identity links)
+        run: scripts/apply-stack.sh clusters/main/tenants
+
       - name: Argo CD (installs everything else from gitops/)
         run: scripts/apply-stack.sh clusters/main/bootstrap
 
