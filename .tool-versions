@@ -6,3 +6,4 @@ kubectl 1.37.2
 helm 3.22.1
 kind 0.33.0
 docker-cli 29.10.0
+kubeconform 0.8.0
