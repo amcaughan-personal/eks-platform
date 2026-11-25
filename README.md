@@ -33,6 +33,7 @@ gitops/               everything Argo CD installs
     local/            what the local kind cluster runs: the add-ons that don't need AWS
 scripts/
   cluster-down.sh     takes a cluster down and checks nothing is left behind
+  apply-stack.sh      applies one stack, printing only its summary (CI)
   local-cluster.sh    a local kind cluster running Argo CD, for working on gitops/
 ```
 
