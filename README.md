@@ -25,7 +25,8 @@ infra/terragrunt/
         bootstrap/    Argo CD, and the root app that points it at gitops/clusters/main/
   modules/            the few modules no community module covers
 gitops/               everything Argo CD installs
-  argocd/             Argo CD's Helm values, and the root app chart
+  argocd/             Argo CD: the upstream chart's version and this platform's values
+  root/               the one app a cluster starts from; points Argo CD at clusters/<name>/
   addons/             add-ons every cluster runs (metrics-server)
   clusters/
     main/             what the main cluster runs: the add-ons, Karpenter's node pool

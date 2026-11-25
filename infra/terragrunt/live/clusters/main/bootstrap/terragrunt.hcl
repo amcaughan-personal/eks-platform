@@ -25,7 +25,6 @@ dependencies {
 }
 
 inputs = {
-  cluster_name         = local.cluster.name
-  gitops_dir           = "${get_repo_root()}/gitops"
-  argocd_chart_version = "10.19.1"
+  cluster_name = local.cluster.name
+  gitops_dir   = "${get_repo_root()}/gitops"
 }

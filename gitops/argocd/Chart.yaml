@@ -1,0 +1,11 @@
+# Argo CD for every cluster: the local kind cluster (scripts/local-cluster.sh) and EKS
+# (clusters/<name>/bootstrap). The upstream chart's version is set here and nowhere else.
+apiVersion: v2
+name: argocd
+description: Argo CD, with this platform's values.
+type: application
+version: 1.0.0
+dependencies:
+  - name: argo-cd
+    version: 10.19.1
+    repository: https://argoproj.github.io/argo-helm

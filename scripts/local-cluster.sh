@@ -8,7 +8,6 @@
 set -euo pipefail
 
 name="eks-platform-local"
-argocd_chart_version="10.19.1"
 
 case "${1:-}" in
   up)
@@ -16,12 +15,11 @@ case "${1:-}" in
     kind get clusters 2>/dev/null | grep -qx "$name" || kind create cluster --name "$name" --wait 2m
     kubectl config use-context "kind-$name" >/dev/null
 
-    helm upgrade --install argocd argo-cd \
-      --repo https://argoproj.github.io/argo-helm --version "$argocd_chart_version" \
-      --namespace argocd --create-namespace \
-      --values gitops/argocd/values.yaml --wait --timeout 5m
+    helm dependency update gitops/argocd >/dev/null
+    helm upgrade --install argocd gitops/argocd \
+      --namespace argocd --create-namespace --wait --timeout 5m
 
-    helm upgrade --install root gitops/argocd/root --namespace argocd \
+    helm upgrade --install root gitops/root --namespace argocd \
       --set cluster=local --set revision="$branch"
 
     echo "Argo CD is syncing gitops/clusters/local/ from branch $branch."
