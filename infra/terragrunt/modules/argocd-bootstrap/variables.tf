@@ -7,10 +7,6 @@ variable "gitops_dir" {
   type        = string
 }
 
-variable "argocd_chart_version" {
-  type = string
-}
-
 variable "revision" {
   description = "The branch Argo CD follows."
   type        = string
