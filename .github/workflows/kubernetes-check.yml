@@ -14,6 +14,6 @@ permissions:
 
 jobs:
   kubernetes:
-    uses: amcaughan-personal/shared-workflows/.github/workflows/kubernetes-check.yml@74341eec6ea571874cb258f2521faeb5f1d69b15 # unreleased, for testing
+    uses: amcaughan-personal/shared-workflows/.github/workflows/kubernetes-check.yml@b8d6eec5549f1cf8c41c594531f3febd7d059c8a # v2.4.0
     with:
       kubernetes_version: 1.37.0
