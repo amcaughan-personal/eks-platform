@@ -1,0 +1,4 @@
+repo: https://github.com/amcaughan-personal/eks-platform.git
+path: tmp-demo-tenant
+revision: tenant-isolation
+quota: { cpu: "2", memory: 2Gi, pods: "10" }
