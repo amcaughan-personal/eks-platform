@@ -32,12 +32,7 @@ delete_detached_interfaces() {
 }
 
 destroy() {
-  delete_detached_interfaces
-if ! destroy; then
-  echo "Destroy stopped; deleting detached network interfaces and trying again..."
-  delete_detached_interfaces
-  destroy
-fi
+  terragrunt run --all --non-interactive --working-dir "$live/clusters/$cluster" -- destroy -auto-approve
 }
 
 if aws eks describe-cluster --name "$cluster" >/dev/null 2>&1; then
@@ -54,7 +49,12 @@ if aws eks describe-cluster --name "$cluster" >/dev/null 2>&1; then
   fi
 fi
 
-terragrunt run --all --non-interactive --working-dir "$live/clusters/$cluster" -- destroy -auto-approve
+delete_detached_interfaces
+if ! destroy; then
+  echo "Destroy stopped; deleting detached network interfaces and trying again..."
+  delete_detached_interfaces
+  destroy
+fi
 
 echo "Checking for leftovers..."
 leftovers=0

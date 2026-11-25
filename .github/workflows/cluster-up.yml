@@ -3,7 +3,7 @@ name: cluster-up
 # Brings the main cluster up: its Terraform stacks (control plane, system nodes, Karpenter,
 # Argo CD), then Argo CD installs the rest from gitops/. Runs in the cluster-up environment,
 # so each run waits for approval: a running cluster costs money until cluster-down takes it
-# down (it does every night, unless the repo variable KEEP_CLUSTER_UP is true).
+# down (it does every night, unless the cluster-down environment's KEEP_CLUSTER_UP is true).
 #
 # AWS access is the cluster-lifecycle role (personal-infra), which trusts only this file's
 # jobs in the cluster-up environment. Terraform's output stays on the runner (this repo is
@@ -52,3 +52,20 @@ jobs:
 
       - name: Argo CD (installs everything else from gitops/)
         run: scripts/apply-stack.sh clusters/main/bootstrap
+
+      # A green run means a working cluster, not just finished Terraform: wait until every Argo
+      # CD application has synced from gitops/ and is healthy.
+      - name: Wait for Argo CD's applications
+        run: |
+          aws eks update-kubeconfig --name main --region us-east-2 >/dev/null
+          for _ in $(seq 1 60); do
+            apps="$(kubectl -n argocd get applications -o jsonpath='{range .items[*]}{.status.sync.status}/{.status.health.status}{"\n"}{end}')"
+            if [ -n "$apps" ] && ! grep -qv '^Synced/Healthy$' <<< "$apps"; then
+              kubectl -n argocd get applications
+              exit 0
+            fi
+            sleep 10
+          done
+          kubectl -n argocd get applications
+          echo "::error::Argo CD's applications aren't all synced and healthy after 10 minutes"
+          exit 1
