@@ -12,7 +12,9 @@ dependency "eks" {
     cluster_endpoint                   = "https://mock.eks.amazonaws.com"
     cluster_certificate_authority_data = "bW9jaw=="
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show"]
+  # Destroy too: once the cluster is gone (e.g. a teardown that stopped halfway), these
+  # stacks have nothing left to destroy, but still need a provider configuration.
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "providers", "show", "destroy"]
 }
 
 generate "helm_provider" {
