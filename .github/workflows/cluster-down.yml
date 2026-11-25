@@ -2,7 +2,7 @@ name: cluster-down
 
 # Takes the main cluster down with scripts/cluster-down.sh, which fails if anything tagged as
 # the cluster's is left behind. Runs every night, so a forgotten cluster never runs for more
-# than a day (skipped when there's no cluster, or the repo variable KEEP_CLUSTER_UP is true),
+# than a day (skipped when there's no cluster, or this environment's KEEP_CLUSTER_UP is true),
 # and by hand.
 #
 # AWS access is the cluster-lifecycle role (personal-infra), which trusts only this file's

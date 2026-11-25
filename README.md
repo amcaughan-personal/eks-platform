@@ -62,11 +62,17 @@ terragrunt run --all -- plan
 
 From GitHub: run the **cluster-up** workflow (Actions tab). It waits for approval (the
 `cluster-up` environment), then applies `clusters/main` in about 15 minutes. Every night at
-03:00 UTC, **cluster-down** takes the cluster down again, unless the repository variable
-`KEEP_CLUSTER_UP` is `true`. Each runs in its own environment (`cluster-up`,
-`cluster-down`) and signs in to AWS as the `cluster-lifecycle` role from personal-infra,
-which can manage this cluster's resources and nothing else. Both log only summary lines
-(this repo is public).
+03:00 UTC, **cluster-down** takes the cluster down again, unless the `cluster-down`
+environment's variable `KEEP_CLUSTER_UP` is `true`. Each runs in its own environment
+(`cluster-up`, `cluster-down`) and signs in to AWS as the `cluster-lifecycle` role from
+personal-infra, which can manage this cluster's resources and nothing else. Both log only
+summary lines (this repo is public). cluster-up finishes once Argo CD's applications are
+synced and healthy.
+
+`KEEP_CLUSTER_UP`, like every GitHub setting in this org, comes from personal-infra: an SSM
+parameter at `/github/eks-platform/cluster-down/KEEP_CLUSTER_UP` (value `true`) becomes that
+environment's variable when personal-infra's GitHub stack is applied. Delete the parameter
+and apply again to go back to nightly teardowns.
 
 Or from the dev container:
 
@@ -100,11 +106,18 @@ cd /workspace
 scripts/cluster-down.sh main
 ```
 
-The script first deletes Karpenter's node pools and waits for its nodes to go: Terraform
-never knew about those instances, so `destroy` alone would leave them running. Then it
-destroys the cluster's stacks, and finally checks for anything still tagged as the
-cluster's (instances, volumes, launch templates, security groups, network interfaces,
-load balancers, instance profiles), failing if it finds any.
+The script:
+
+1. Deletes Argo CD's applications, which removes everything they installed (otherwise Argo CD
+   would put back whatever is deleted next).
+2. Deletes Karpenter's node pools and waits for its nodes to go: Terraform never knew about
+   those instances, so `destroy` alone would leave them running.
+3. Deletes network interfaces the VPC CNI left behind (they keep the node security group in
+   use), then destroys the cluster's stacks. If the destroy stops on one, it cleans up and
+   tries once more.
+4. Checks for anything still tagged as the cluster's (instances, volumes, launch templates,
+   security groups, network interfaces, load balancers, instance profiles), and fails if it
+   finds any.
 
 `shared/` costs nothing while idle (no NAT gateway, an empty bucket, empty log groups, an
 idle queue), so it stays up between clusters. To remove it too, after every cluster is
