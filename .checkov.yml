@@ -5,3 +5,9 @@ skip-check:
   - CKV_TF_1 # Community modules come from the Terraform registry, pinned to an exact version; the registry can't pin a commit hash
   - CKV_AWS_338 # Log groups: 1-year retention is unnecessary for a small personal project
   - CKV_AWS_158 # Log groups: customer-managed KMS keys aren't worth the key management here
+
+skip-path:
+  # A wrapper around the upstream Argo CD chart: rendering it scans Argo CD's own templates
+  # (its NetworkPolicies, limits and RBAC), not this repo's code. The chart's version is
+  # pinned and its values are reviewed here.
+  - gitops/argocd
