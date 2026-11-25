@@ -43,14 +43,12 @@ jobs:
           role-session-name: gha-cluster-up-${{ github.run_id }}-${{ github.run_attempt }}
           mask-aws-account-id: true
 
-      - name: Apply clusters/main
-        run: |
-          set -o pipefail
-          log="$RUNNER_TEMP/apply.log"
-          if terragrunt run --all --non-interactive --working-dir infra/terragrunt/live/clusters/main \
-              -- apply -auto-approve -no-color > "$log" 2>&1; then
-            grep -oE '\[[a-z/]+\] terraform: Apply complete.*' "$log"
-          else
-            grep -E 'Error:|Apply complete' "$log" | sed -E 's/[0-9]{12}/************/g'
-            exit 1
-          fi
+      # One step per stack, in dependency order, so the run shows which one it's on.
+      - name: EKS (control plane, system nodes, add-ons)
+        run: scripts/apply-stack.sh clusters/main/eks
+
+      - name: Karpenter
+        run: scripts/apply-stack.sh clusters/main/karpenter
+
+      - name: Argo CD (installs everything else from gitops/)
+        run: scripts/apply-stack.sh clusters/main/bootstrap
