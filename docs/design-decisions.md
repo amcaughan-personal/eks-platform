@@ -9,6 +9,7 @@ Why the platform is built the way it is, and what each choice gives up.
 - [Pod Identity, not IRSA](#pod-identity-not-irsa)
 - [Up on approval, down every night, verified empty](#up-on-approval-down-every-night-verified-empty)
 - [A CI role that can only do one job](#a-ci-role-that-can-only-do-one-job)
+- [Onboarding a team is one folder](#onboarding-a-team-is-one-folder)
 - [No NAT gateway](#no-nat-gateway)
 
 ## A shared cluster instead of MWAA
@@ -104,6 +105,24 @@ scoping keeps it away from everything else in the account.
 
 **Trade-off:** a wider change (a second cluster, a new kind of resource) needs a deliberate
 change to the role.
+
+## Onboarding a team is one folder
+
+**Decision:** a team that needs compute gets a folder, `gitops/tenants/<name>/`, in one pull
+request. From it, Argo CD gives the team a namespace with a budget, default pod sizes, an
+Argo CD project that deploys only from their repo into their namespace, and isolation from
+other teams' traffic and from the system priorities; Terraform links their service accounts
+to IAM roles in their own repo through Pod Identity.
+
+**Why:** teams ship by merging in their own repo, without tickets, while the platform owns
+the limits. Rather than approving each team's AWS access separately, personal-infra
+delegates one bounded rule: the CI role may hand pods any role named `*-pod-*`, and only to
+Pod Identity. Every such role carries its repo's permissions boundary, and the tenants stack
+refuses a team whose pod roles aren't named after it, so a team can only get its own roles.
+
+**Trade-off:** namespaces are a policy boundary, not hardware: teams share nodes and the
+Kubernetes version. A team needing stronger isolation (regulated data, its own upgrade pace)
+gets its own cluster, another folder under `clusters/`.
 
 ## No NAT gateway
 
